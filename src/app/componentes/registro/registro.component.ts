@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 //import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 //para poder hacer las validaciones
 import { Validators, FormBuilder, FormControl, FormGroup} from '@angular/forms';
@@ -24,7 +24,8 @@ export class RegistroComponent implements OnInit {
   constructor(
     private miConstructor: FormBuilder, 
     public authService: AuthService, 
-    private location: Location
+    private location: Location,
+    private cd: ChangeDetectorRef
     //private jugadoresService: JugadoresService
     )
   {
@@ -33,13 +34,36 @@ export class RegistroComponent implements OnInit {
     {
       usuario: ['', Validators.compose([Validators.email, Validators.required])],//this.email
       clave: ['', Validators.compose([Validators.required, Validators.minLength(6)])],
-      confirmaClave: ['', Validators.compose([Validators.required, Validators.minLength(6)])]/*,
+      confirmaClave: ['', Validators.compose([Validators.required, Validators.minLength(6)])],
+      imagen: ['', Validators.compose([])]/*,
       sexo: ['', Validators.compose([])],
     cuit: ['', Validators.compose([Validators.maxLength(11), Validators.minLength(11)])]*/
     });
   }
 
   //constructor( ) { }
+
+  onFileChange(event) 
+  {
+    const reader = new FileReader();
+ 
+    if(event.target.files && event.target.files.length) 
+    {
+      const [file] = event.target.files;
+      reader.readAsDataURL(file);
+  
+      reader.onload = () => 
+      {
+        this.formRegistro.patchValue(
+        {
+          file: reader.result
+        });
+      
+        // need to run CD since file load runs outside of zone
+        this.cd.markForCheck();
+      };
+    }
+  }
 
   ngOnInit() 
   {
@@ -48,7 +72,7 @@ export class RegistroComponent implements OnInit {
     this.errorDatos = false;
     this.errorClave = false;
     this.enEspera = false;
-    this.formRegistro.setValue({usuario: '', clave: '', confirmaClave: ''/*, sexo: ESexo.masculino, cuit: ''*/});
+    this.formRegistro.setValue({usuario: '', clave: '', confirmaClave: '', imagen: ''/*, sexo: ESexo.masculino, cuit: ''*/});
   }
 
 //  get eSexo() { return ESexo; }
@@ -87,7 +111,8 @@ export class RegistroComponent implements OnInit {
     {
       if(this.formRegistro.value.clave === this.formRegistro.value.confirmaClave)
       {
-        await this.authService.SignUp(this.formRegistro.value.usuario, this.formRegistro.value.clave);
+        let file = $("#img-file").get(0).files[0];
+        await this.authService.SignUp(this.formRegistro.value.usuario, this.formRegistro.value.clave, file.name, file);
         usuarioValido = this.authService.isLoggedIn();
         this.error = !usuarioValido;
         this.ok = usuarioValido;

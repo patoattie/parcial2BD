@@ -1,6 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { AngularFirestore, AngularFirestoreDocument } from '@angular/fire/firestore';
+import { AngularFireStorage } from "@angular/fire/storage";
 import { Router } from "@angular/router";
 import * as firebase from 'firebase/app';
 
@@ -16,6 +17,7 @@ export class AuthService {
   constructor(
     public afAuth: AngularFireAuth, // Inject Firebase auth service
     public afs: AngularFirestore,   // Inject Firestore service
+    public storage: AngularFireStorage,
     public ngZone: NgZone, // NgZone service to remove outside scope warning
     public router: Router) 
     {
@@ -60,12 +62,51 @@ export class AuthService {
   }
 
   // Sign up with email/password
-  public SignUp(email: string, password: string) {
+  public SignUp(email: string, password: string, nombre?: string, archivoFoto?: string, urlFoto?: string) 
+  {
     return this.afAuth.auth.createUserWithEmailAndPassword(email, password)
       .then((result) => 
       {
-        /* Call the SendVerificaitonMail() function when new user sign 
-        up and returns promise */
+        if(nombre != undefined)
+        {
+          result.user.updateProfile({
+            displayName: nombre
+          });
+        }
+
+        if(urlFoto != undefined)
+        {
+          let metadata = 
+          {
+            contentType: 'image/jpeg',
+            customMetadata: 
+            {
+              'usuario': email,
+              'id': result.user.uid
+            }
+          };
+
+          let uploadTask = this.storage.ref(urlFoto).child('images/' + archivoFoto).put(urlFoto, metadata);
+          uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
+            function(snapshot) 
+            {
+                // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+                var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                console.log('Upload is ' + progress + '% done');
+            },
+            function(E) {},
+            function() 
+            {
+              uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) 
+              {
+                console.log('File available at', downloadURL);
+              
+                result.user.photoURL = downloadURL;                      
+              });
+            });
+        }
+        
+        //Call the SendVerificaitonMail() function when new user sign up and returns promise
         //this.SendVerificationMail();
         this.SetUserData(result.user);
         console.log("Login OK");
@@ -80,7 +121,9 @@ export class AuthService {
       {
         console.log(error.code);
         this.error = error.code;
-      })
+      });
+      /*console.info("nombre", nombre);
+      console.info("urlFoto", urlFoto);*/
   }
 
   // Send email verfificaiton when new user sign up
