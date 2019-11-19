@@ -27,6 +27,11 @@ button:hover {
     opacity: 0.8;
 }
 
+.userbtn {
+    width: auto;
+    padding: 10px 18px;
+    background-color: orange;
+}
 .cancelbtn {
     width: auto;
     padding: 10px 18px;

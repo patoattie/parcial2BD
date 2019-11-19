@@ -62,7 +62,7 @@ export class AuthService {
   }
 
   // Sign up with email/password
-  public SignUp(email: string, password: string, nombre?: string, archivoFoto?: string, urlFoto?: string) 
+  public SignUp(email: string, password: string, nombre?: string, archivoFoto?: any) 
   {
     return this.afAuth.auth.createUserWithEmailAndPassword(email, password)
       .then((result) => 
@@ -71,14 +71,18 @@ export class AuthService {
         {
           result.user.updateProfile({
             displayName: nombre
+          })
+          .then(() =>
+          {
+            this.SetUserData(result.user);
           });
-        }
+  }
 
-        if(urlFoto != undefined)
+        if(archivoFoto != undefined)
         {
           let metadata = 
           {
-            contentType: 'image/jpeg',
+            contentType: 'image/png',
             customMetadata: 
             {
               'usuario': email,
@@ -86,22 +90,31 @@ export class AuthService {
             }
           };
 
-          let uploadTask = this.storage.ref(urlFoto).child('images/' + archivoFoto).put(urlFoto, metadata);
-          uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
-            function(snapshot) 
+          let uploadTask = this.storage.upload('images/' + archivoFoto.name, archivoFoto, metadata);
+
+          uploadTask.task.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
+            (snapshot) =>
             {
                 // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-                var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                let progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                 console.log('Upload is ' + progress + '% done');
             },
-            function(E) {},
-            function() 
+            (E) => {},
+            () =>
             {
-              uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) 
+              uploadTask.task.snapshot.ref.getDownloadURL()
+              .then((downloadURL) =>
               {
                 console.log('File available at', downloadURL);
               
-                result.user.photoURL = downloadURL;                      
+                //result.user.photoURL = downloadURL;                      
+                result.user.updateProfile({
+                  photoURL: downloadURL
+                })
+                .then(() =>
+                {
+                  this.SetUserData(result.user);
+                });
               });
             });
         }
@@ -236,5 +249,10 @@ export class AuthService {
   public getUid(): string
   {
     return this.userData.uid;
+  }
+
+  public getUrlFoto(): string
+  {
+    return JSON.parse(localStorage.getItem("user")).photoURL;
   }
 }

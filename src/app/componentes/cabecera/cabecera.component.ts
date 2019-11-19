@@ -56,4 +56,9 @@ export class CabeceraComponent implements OnInit {
     //await this.jugadoresService.SignOut();
     await this.authService.SignOut();
   }
+
+  public getUrlFoto(): string
+  {
+    return this.authService.getUrlFoto();
+  }
 }

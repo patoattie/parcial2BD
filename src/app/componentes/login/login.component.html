@@ -1,10 +1,12 @@
+<app-cabecera>  </app-cabecera>
+
 <div class="container" >
     <div class="jumbotron" style="padding:50px;">
       <!-- <form action="return true;"> -->
       <form [formGroup]="formLogin">
-        <div class="imgcontainer">
+        <!-- <div class="imgcontainer">
           <img src="./assets/imagenes/login.png" alt="Avatar" class="avatar" max-width="104" (click)="completarUsuario()">
-        </div>
+        </div> -->
   
         <div class="container">
           <label><b>Usuario</b></label>
@@ -35,6 +37,7 @@
         <div class="container" style="background-color:#f1f1f1">
           <!-- <button type="button" class="cancelbtn" routerLink="">Cancelar</button> -->
           <button type="button" class="aceptbtn" routerLink="/Registro" >Registrarse</button>
+          <button type="button" class="userbtn" (click)="completarUsuario()" >Usuario</button>
           <!-- <span class="psw">Te olvidaste <a href="#">la clave?</a></span> -->
         </div>
        
