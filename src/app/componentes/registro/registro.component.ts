@@ -111,7 +111,8 @@ export class RegistroComponent implements OnInit {
     {
       if(this.formRegistro.value.clave === this.formRegistro.value.confirmaClave)
       {
-        let file = $("#img-file").get(0).files[0];
+        //let file = $("#img-file").get(0).files[0];
+        let file = (<HTMLInputElement>document.getElementById("img-file")).files[0];
 //console.log(file.get(0).files[0].name);
         await this.authService.SignUp(this.formRegistro.value.usuario, this.formRegistro.value.clave, null, file);
         usuarioValido = this.authService.isLoggedIn();
